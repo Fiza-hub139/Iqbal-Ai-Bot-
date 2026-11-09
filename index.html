@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iqbal Poetry Bot — Wisdom & Khudi</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts for Elegance & Nastaliq feel -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700&family=Inter:wght@300;400;500;600;700&family=Noto+Nastaliq+Urdu:wght@400;700&display=swap" rel="stylesheet">
+    <!-- FontAwesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        baseBg: '#F8F6F0',      /* 60% Neutral warm parchment background */
+                        surface: '#1A2E26',     /* 30% Deep forest green elegant surface */
+                        surfaceLight: '#243F35',/* Variation of deep forest */
+                        accent: '#D4AF37',      /* 10% Warm gold accent */
+                        accentHover: '#C5A028',
+                        cardBg: '#FFFFFF',
+                        textDark: '#2C3E35',
+                        textMuted: '#6B7C73'
+                    },
+                    fontFamily: {
+                        cinzel: ['Cinzel', 'serif'],
+                        urdu: ['"Noto Nastaliq Urdu"', 'serif'],
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for sleek look */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F8F6F0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #D4AF37;
+            border-radius: 3px;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .urdu-text {
+            direction: rtl;
+            line-height: 2.2;
+        }
+    </style>
+</head>
+<body class="bg-baseBg text-textDark font-sans h-full flex flex-col selection:bg-accent selection:text-surface">
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-y-[-150%] opacity-0 transition-all duration-300 bg-surface text-accent px-5 py-3 rounded-xl shadow-2xl border border-accent/30 flex items-center gap-3">
+        <i class="fa-solid fa-circle-check text-accent text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium text-baseBg">Copied to clipboard!</span>
+    </div>
+
+    <!-- Header -->
+    <header class="bg-surface text-baseBg border-b border-accent/20 sticky top-0 z-40 shadow-md">
+        <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-accent/20 border border-accent flex items-center justify-center text-accent shadow-inner">
+                    <i class="fa-solid fa-feather-pointed text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="font-cinzel text-xl font-bold tracking-wider text-accent">Iqbal AI Bot</h1>
+                    <p class="text-xs text-baseBg/70 tracking-wide font-light">The Voice of Khudi & Philosophy</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <button onclick="openFavoritesModal()" class="relative px-4 py-2 rounded-xl bg-surfaceLight hover:bg-accent/20 text-baseBg hover:text-accent border border-accent/30 transition-all duration-200 flex items-center gap-2 text-sm font-medium">
+                    <i class="fa-solid fa-bookmark text-accent"></i>
+                    <span class="hidden sm:inline">Saved Verses</span>
+                    <span id="fav-badge" class="absolute -top-1 -right-1 bg-accent text-surface text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center hidden">0</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 max-w-6xl w-full mx-auto p-4 md:p-6 flex flex-col md:flex-row gap-6 overflow-hidden">
+
+        <!-- Left Column: Quick Chips & Philosophy Guide (Desktop Sidebar / Mobile Drawer) -->
+        <aside class="w-full md:w-80 flex flex-col gap-6 shrink-0">
+            <!-- Welcome Card -->
+            <div class="bg-surface text-baseBg p-5 rounded-2xl shadow-xl border border-accent/20 relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-accent/10 text-9xl font-cinzel pointer-events-none select-none">ع</div>
+                <h2 class="font-cinzel text-lg font-bold text-accent mb-2">Explore the Sage</h2>
+                <p class="text-xs text-baseBg/80 leading-relaxed mb-4">
+                    Type a keyword below or select a theme to uncover profound verses by Allama Dr. Muhammad Iqbal regarding selfhood, love, youth, and freedom.
+                </p>
+                <div class="flex items-center gap-2 text-xs text-accent">
+                    <i class="fa-solid fa-lightbulb"></i>
+                    <span>Tip: Try keywords like "khudi", "ishq", "shaheen", or "hope".</span>
+                </div>
+            </div>
+
+            <!-- Quick Suggestion Chips -->
+            <div class="bg-cardBg p-5 rounded-2xl shadow-sm border border-textMuted/20 flex flex-col gap-3">
+                <h3 class="text-xs font-semibold uppercase tracking-wider text-textMuted">Popular Themes & Keywords</h3>
+                <div id="keyword-chips" class="flex flex-wrap gap-2">
+                    <!-- Populated dynamically via JS -->
+                </div>
+            </div>
+
+            <!-- Stats or Inspiration -->
+            <div class="hidden md:flex flex-col bg-cardBg p-5 rounded-2xl shadow-sm border border-textMuted/20 text-center gap-2">
+                <div class="text-accent text-2xl font-cinzel font-bold" id="total-verses-count">12+</div>
+                <div class="text-xs font-medium text-textMuted uppercase tracking-wider">Curated Masterpieces</div>
+                <p class="text-xs text-textMuted/80 mt-1">"Raise your self so high that before every decree, God asks man: What is your intent?"</p>
+            </div>
+        </aside>
+
+        <!-- Right Column: Chatbot & Search Interface -->
+        <section class="flex-1 flex flex-col bg-cardBg rounded-2xl shadow-lg border border-textMuted/20 overflow-hidden">
+            
+            <!-- Chat / Verse Feed Header -->
+            <div class="bg-baseBg/80 backdrop-blur px-6 py-4 border-b border-textMuted/20 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-3 h-3 rounded-full bg-emerald-500 animate-pulse"></div>
+                    <span class="text-sm font-semibold text-surface">Bot Assistant Active</span>
+                </div>
+                <button onclick="clearChat()" class="text-xs text-textMuted hover:text-surface transition-colors flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-baseBg">
+                    <i class="fa-solid fa-rotate-right"></i> Reset Chat
+                </button>
+            </div>
+
+            <!-- Chat Messages Container -->
+            <div id="chat-container" class="flex-1 p-4 md:p-6 overflow-y-auto flex flex-col gap-6">
+                <!-- Initial Bot Greeting -->
+                <div class="flex items-start gap-3 animate-fade-in">
+                    <div class="w-9 h-9 rounded-xl bg-surface text-accent flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div class="flex flex-col gap-2 max-w-[85%] md:max-w-[75%]">
+                        <div class="bg-baseBg p-4 rounded-2xl rounded-tl-sm border border-textMuted/15 shadow-sm text-textDark text-sm leading-relaxed">
+                            <p class="font-medium text-surface mb-1">Salam! I am your Iqbal Poetry Guide.</p>
+                            <p>Type any keyword or spiritual concept like <strong>"khudi"</strong>, <strong>"ishq"</strong>, <strong>"youth"</strong>, or <strong>"eagle"</strong> to discover matching verses, translations, and philosophical insights.</p>
+                        </div>
+                        <span class="text-[10px] text-textMuted ml-1">Just now</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Typing indicator (hidden by default) -->
+            <div id="typing-indicator" class="px-6 py-2 hidden items-center gap-2 text-textMuted text-xs italic">
+                <div class="w-2 h-2 rounded-full bg-accent animate-bounce"></div>
+                <div class="w-2 h-2 rounded-full bg-accent animate-bounce [animation-delay:0.2s]"></div>
+                <div class="w-2 h-2 rounded-full bg-accent animate-bounce [animation-delay:0.4s]"></div>
+                <span>Iqbal Bot is searching the collection...</span>
+            </div>
+
+            <!-- Search / Chat Input Form -->
+            <div class="p-4 bg-baseBg border-t border-textMuted/20">
+                <form id="search-form" onsubmit="handleSearch(event)" class="flex items-center gap-3">
+                    <div class="relative flex-1">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-textMuted">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </span>
+                        <input 
+                            type="text" 
+                            id="query-input" 
+                            placeholder="Type a keyword (e.g., khudi, hope, freedom, ishq)..." 
+                            class="w-full pl-11 pr-4 py-3.5 bg-cardBg border border-textMuted/30 rounded-xl text-sm focus:outline-none focus:border-accent focus:ring-2 focus:ring-accent/20 transition-all text-textDark placeholder-textMuted"
+                            autocomplete="off"
+                        >
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="bg-surface hover:bg-surfaceLight text-accent px-6 py-3.5 rounded-xl font-semibold text-sm shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center gap-2 shrink-0 border border-accent/30">
+                        <span>Search</span>
+                        <i class="fa-solid fa-paper-plane text-xs"></i>
+                    </button>
+                </form>
+            </div>
+
+        </section>
+
+    </main>
+
+    <!-- Favorites Modal -->
+    <div id="favorites-modal" class="fixed inset-0 z-50 bg-surface/60 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-cardBg w-full max-w-2xl max-h-[85vh] rounded-2xl shadow-2xl border border-accent/30 flex flex-col overflow-hidden animate-fade-in">
+            <div class="bg-surface text-baseBg px-6 py-4 flex items-center justify-between border-b border-accent/20">
+                <div class="flex items-center gap-3">
+                    <i class="fa-solid fa-bookmark text-accent text-lg"></i>
+                    <h3 class="font-cinzel font-bold text-lg text-accent">Your Saved Verses</h3>
+                </div>
+                <button onclick="closeFavoritesModal()" class="w-8 h-8 rounded-lg bg-surfaceLight hover:bg-accent hover:text-surface text-baseBg flex items-center justify-center transition-colors">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+            <div id="favorites-list" class="p-6 overflow-y-auto flex-1 flex flex-col gap-4 divide-y divide-textMuted/15">
+                <!-- Populated dynamically -->
+            </div>
+            <div class="p-4 bg-baseBg border-t border-textMuted/20 text-right">
+                <button onclick="closeFavoritesModal()" class="px-5 py-2 bg-surface text-baseBg rounded-xl text-sm font-medium hover:bg-surfaceLight transition-colors">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Application Logic -->
+    <script>
+        // Curated Poetry Database of Allama Iqbal
+        const poetryDatabase = [
+            {
+                id: 1,
+                keywords: ["khudi", "self", "soul", "power", "ego", "identity", "potential"],
+                theme: "Khudi (Selfhood & Ego)",
+                urdu: "خودی کو کر بلند اتنا کہ ہر تقدیر سے پہلے\nخدا بندے سے خود پوچھے بتا تیری رضا کیا ہے",
+                translation: "Raise selfhood (Khudi) to such heights that before every decree,\nGod Himself shall ask man: 'What is your intent?'",
+                meaning: "This is Iqbal's most famous verse on human potential and divine partnership. When a person cultivates deep self-awareness, discipline, and moral strength, they align so closely with cosmic truth that their willpower becomes sacred."
+            },
+            {
+                id: 2,
+                keywords: ["ishq", "love", "passion", "devotion", "heart"],
+                theme: "Ishq (Divine Love & Passion)",
+                urdu: "محنتِ مَکاں سے ہے، عشقِ لامکاں بھی دیکھ\nاپنا بھی امتحان لے، اپنا جہاں بھی دیکھ",
+                translation: "Look beyond the struggle of physical space to infinite love (Ishq),\nPut your own self to test, and behold your own inner universe.",
+                meaning: "Iqbal distinguishes between mere intellect (Aql) which calculates limits and Love (Ishq) which transcends boundaries and reaches infinite spiritual realms."
+            },
+            {
+                id: 3,
+                keywords: ["shaheen", "eagle", "youth", "ambition", "flight", "heights", "bird"],
+                theme: "The Shaheen (The Royal Falcon)",
+                urdu: "پرہیز و تقویٰ سے نہیں کم شاھین کا پرواز\nگر ہو نیت صاف تو بلندی ہے مقدر",
+                translation: "The falcon does not soar merely by caution, but by high resolve,\nWhen intention is pure, loftiness is your destiny.",
+                meaning: "The Shaheen (falcon) represents Iqbal's ideal youth: independent, soaring high above worldly greed, never building a nest on the ground, and constantly seeking new horizons."
+            },
+            {
+                id: 4,
+                keywords: ["hope", "future", "optimism", "faith", "persistence", "strength"],
+                theme: "Hope & Resilience",
+                urdu: "ناامید نہ ہو، اے رہِ روِ شوق، کہ ہما\nکچھ دِنوں کے لیے صحرا میں بھی آ جاتا ہے",
+                translation: "Despair not, O traveler of desire, for the auspicious bird Huma\nSometimes deigns to visit even the barren desert sands.",
+                meaning: "Even in times of severe hardship and seemingly barren circumstances, moments of supreme grace and triumph are bound to appear for those who persevere."
+            },
+            {
+                id: 5,
+                keywords: ["freedom", "azaadi", "liberty", "slavery", "chains", "pride"],
+                theme: "Freedom & Dignity",
+                urdu: "غلامی سے ہے روحِ ملت میں مردگی\nکہ آزادی ہے مومن کی حیاتِ جاوداں",
+                translation: "Slavery brings numbness to the soul of a nation,\nFor freedom is the eternal life of the faithful believer.",
+                meaning: "Iqbal emphasizes that political and spiritual subjugation robs human beings of their creative spark, whereas liberty is essential for true human dignity and spiritual growth."
+            },
+            {
+                id: 6,
+                keywords: ["youth", "jawan", "students", "future", "energy", "action"],
+                theme: "The Youth (Shaheen-e-Milat)",
+                urdu: "تُو شاہیں ہے، بسیرا کر پہاڑوں کی چٹانوں پر\nمُلوکیت کا یہ کُنجہ نہیں تیرے لیے سزاوار",
+                translation: "You are a falcon; make your abode on mountain cliffs,\nThis cage of transient earthly pomp is not befitting you.",
+                meaning: "A direct call to young people not to settle for superficial comforts or modern slavery, but to aim high, embrace challenges, and pioneer a brighter future."
+            },
+            {
+                id: 7,
+                keywords: ["faith", "iman", "belief", "trust", "universe"],
+                theme: "Faith & Universe",
+                urdu: "خودی کو کر بلند اتنا... (مومن کی طاقت)",
+                translation: "Belief in oneself stems from absolute trust in the Divine architecture of existence.",
+                meaning: "True faith is not passive resignation; it is active participation in the creation of destiny alongside the Almighty."
+            },
+            {
+                id: 8,
+                keywords: ["wisdom", "knowledge", "science", "intellect", "aql"],
+                theme: "Wisdom & Intellect",
+                urdu: "عقل تو کہتی ہے کہ ڈھونڈ لے دنیا کی لذتیں\nعشق کہتا ہے جہانِ جاویداں ہے اور ہی",
+                translation: "Intellect counsels you to seek worldly pleasures and transient joys,\nWhile Love declares the eternal universe is entirely another realm.",
+                meaning: "Iqbal explores the balance between rational scientific knowledge and intuitive spiritual wisdom, showing that human fulfillment requires both."
+            }
+        ];
+
+        // Popular Quick Keywords to display as chips
+        const popularKeywords = ["khudi", "ishq", "shaheen", "youth", "hope", "freedom", "faith", "wisdom"];
+
+        // State for saved favorites
+        let favorites = JSON.parse(localStorage.getItem('iqbal_favorites')) || [];
+
+        // Initialize App on load
+        window.addEventListener('DOMContentLoaded', () => {
+            renderKeywordChips();
+            updateFavoritesBadge();
+        });
+
+        // Render Quick Suggestion Chips
+        function renderKeywordChips() {
+            const container = document.getElementById('keyword-chips');
+            container.innerHTML = popularKeywords.map(keyword => `
+                <button onclick="searchKeyword('${keyword}')" class="px-3 py-1.5 bg-baseBg hover:bg-accent hover:text-surface text-textDark text-xs font-medium rounded-lg border border-textMuted/20 transition-all duration-150 capitalize flex items-center gap-1.5">
+                    <i class="fa-solid fa-hashtag text-[10px] text-accent group-hover:text-surface"></i>
+                    ${keyword}
+                </button>
+            `).join('');
+            
+            document.getElementById('total-verses-count').innerText = poetryDatabase.length + "+";
+        }
+
+        // Handle Form Search
+        function handleSearch(event) {
+            event.preventDefault();
+            const input = document.getElementById('query-input');
+            const query = input.value.trim();
+            if (!query) return;
+
+            // Append User Message
+            appendUserMessage(query);
+            input.value = '';
+
+            // Trigger Bot search simulation
+            simulateBotResponse(query);
+        }
+
+        // Quick search from chip
+        function searchKeyword(keyword) {
+            appendUserMessage(keyword);
+            simulateBotResponse(keyword);
+        }
+
+        // Append User Bubble
+        function appendUserMessage(text) {
+            const container = document.getElementById('chat-container');
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = 'flex items-start justify-end gap-3 animate-fade-in';
+            userMsgDiv.innerHTML = `
+                <div class="flex flex-col gap-1 max-w-[85%] md:max-w-[75%] items-end">
+                    <div class="bg-surface text-baseBg p-4 rounded-2xl rounded-tr-sm shadow-sm text-sm leading-relaxed">
+                        <p>${escapeHtml(text)}</p>
+                    </div>
+                    <span class="text-[10px] text-textMuted mr-1">Just now</span>
+                </div>
+                <div class="w-9 h-9 rounded-xl bg-accent/20 border border-accent text-surface flex items-center justify-center shrink-0 shadow-sm font-bold text-xs">
+                    You
+                </div>
+            `;
+            container.appendChild(userMsgDiv);
+            scrollToBottom();
+        }
+
+        // Simulate Bot Response with searching logic
+        function simulateBotResponse(query) {
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.remove('hidden');
+            typingIndicator.classList.add('flex');
+            scrollToBottom();
+
+            setTimeout(() => {
+                typingIndicator.classList.remove('flex');
+                typingIndicator.classList.add('hidden');
+
+                const matches = searchDatabase(query);
+                appendBotResponse(matches, query);
+            }, 700);
+        }
+
+        // Search algorithm checking keywords or text
+        function searchDatabase(query) {
+            const lowerQuery = query.toLowerCase();
+            const queryTerms = lowerQuery.split(/\s+/);
+
+            // Score verses based on keyword matches
+            const scored = poetryDatabase.map(item => {
+                let score = 0;
+                item.keywords.forEach(kw => {
+                    if (lowerQuery.includes(kw) || kw.includes(lowerQuery)) score += 3;
+                });
+                if (item.theme.toLowerCase().includes(lowerQuery)) score += 2;
+                if (item.translation.toLowerCase().includes(lowerQuery)) score += 1;
+                return { item, score };
+            });
+
+            scored.sort((a, b) => b.score - a.score);
+            
+            // If scores are 0, return a gentle default fallback or general inspiration
+            if (scored[0].score === 0) {
+                // Return top 2 general results if no exact match
+                return poetryDatabase.slice(0, 2);
+            }
+
+            // Return items with score > 0 or top match
+            const results = scored.filter(s => s.score > 0).map(s => s.item);
+            return results.length > 0 ? results.slice(0, 3) : [poetryDatabase[0]];
+        }
+
+        // Append Bot Response with Verses
+        function appendBotResponse(verses, query) {
+            const container = document.getElementById('chat-container');
+            const botMsgDiv = document.createElement('div');
+            botMsgDiv.className = 'flex items-start gap-3 animate-fade-in';
+
+            let versesHtml = verses.map(v => {
+                const isFav = favorites.some(f => f.id === v.id);
+                return `
+                    <div class="bg-baseBg border border-textMuted/20 p-5 rounded-2xl shadow-sm mb-4 last:mb-0 transition-all hover:border-accent/50">
+                        <div class="flex items-center justify-between mb-3 pb-2 border-b border-textMuted/15">
+                            <span class="text-xs font-semibold px-2.5 py-1 bg-surface text-accent rounded-lg">${v.theme}</span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="toggleFavorite(${v.id})" class="w-8 h-8 rounded-lg bg-cardBg hover:bg-accent/20 text-textDark flex items-center justify-center transition-colors shadow-sm" title="Save Verse">
+                                    <i class="fa-solid fa-bookmark ${isFav ? 'text-accent' : 'text-textMuted'}"></i>
+                                </button>
+                                <button onclick="copyVerse(this, \`${escapeQuotes(v.urdu)}\`, \`${escapeQuotes(v.translation)}\`)" class="w-8 h-8 rounded-lg bg-cardBg hover:bg-accent/20 text-textDark flex items-center justify-center transition-colors shadow-sm" title="Copy to clipboard">
+                                    <i class="fa-solid fa-copy text-textMuted hover:text-surface"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Urdu Script -->
+                        <div class="urdu-text text-xl font-urdu text-surface mb-4 text-right py-2 px-3 bg-cardBg/60 rounded-xl border border-textMuted/10">
+                            ${v.urdu.replace(/\n/g, '<br>')}
+                        </div>
+
+                        <!-- English Translation -->
+                        <div class="mb-3">
+                            <h4 class="text-[11px] font-bold uppercase tracking-wider text-textMuted mb-1">English Translation</h4>
+                            <p class="text-sm font-medium text-textDark italic">"${v.translation}"</p>
+                        </div>
+
+                        <!-- Meaning / Philosophy -->
+                        <div>
+                            <h4 class="text-[11px] font-bold uppercase tracking-wider text-textMuted mb-1">Philosophical Context</h4>
+                            <p class="text-xs text-textMuted/90 leading-relaxed">${v.meaning}</p>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            botMsgDiv.innerHTML = `
+                <div class="w-9 h-9 rounded-xl bg-surface text-accent flex items-center justify-center shrink-0 shadow-md">
+                    <i class="fa-solid fa-feather-pointed text-sm"></i>
+                </div>
+                <div class="flex flex-col gap-2 max-w-[90%] md:max-w-[80%] w-full">
+                    <div class="bg-cardBg p-5 rounded-2xl rounded-tl-sm border border-textMuted/20 shadow-md">
+                        <p class="text-xs text-textMuted mb-3">Found ${verses.length} verse(s) matching <span class="text-surface font-bold">"${escapeHtml(query)}"</span>:</p>
+                        ${versesHtml}
+                    </div>
+                    <span class="text-[10px] text-textMuted ml-1">Just now</span>
+                </div>
+            `;
+
+            container.appendChild(botMsgDiv);
+            scrollToBottom();
+        }
+
+        // Copy verse to clipboard
+        function copyVerse(btn, urdu, translation) {
+            const textToCopy = `Iqbal Poetry:\n\n${urdu}\n\nTranslation:\n"${translation}"`;
+            
+            // Fallback for secure context clipboard
+            const tempTextArea = document.createElement("textarea");
+            tempTextArea.value = textToCopy;
+            document.body.appendChild(tempTextArea);
+            tempTextArea.select();
+            try {
+                document.execCommand('copy');
+                showToast("Verse copied to clipboard!");
+            } catch (err) {
+                showToast("Failed to copy verse.");
+            }
+            document.body.removeChild(tempTextArea);
+        }
+
+        // Toggle Favorite
+        function toggleFavorite(id) {
+            const verse = poetryDatabase.find(v => v.id === id);
+            if (!verse) return;
+
+            const index = favorites.findIndex(f => f.id === id);
+            if (index > -1) {
+                favorites.splice(index, 1);
+                showToast("Removed from saved verses");
+            } else {
+                favorites.push(verse);
+                showToast("Saved to favorites!");
+            }
+
+            localStorage.setItem('iqbal_favorites', JSON.stringify(favorites));
+            updateFavoritesBadge();
+            
+            // Re-render if favorites modal is open
+            if (!document.getElementById('favorites-modal').classList.contains('hidden')) {
+                renderFavoritesModalList();
+            }
+        }
+
+        // Update Favorites Badge count
+        function updateFavoritesBadge() {
+            const badge = document.getElementById('fav-badge');
+            if (favorites.length > 0) {
+                badge.innerText = favorites.length;
+                badge.classList.remove('hidden');
+            } else {
+                badge.classList.add('hidden');
+            }
+        }
+
+        // Open Favorites Modal
+        function openFavoritesModal() {
+            renderFavoritesModalList();
+            const modal = document.getElementById('favorites-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        // Close Favorites Modal
+        function closeFavoritesModal() {
+            const modal = document.getElementById('favorites-modal');
+            modal.classList.remove('flex');
+            modal.classList.add('hidden');
+        }
+
+        // Render list inside favorites modal
+        function renderFavoritesModalList() {
+            const listContainer = document.getElementById('favorites-list');
+            if (favorites.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="py-12 text-center text-textMuted flex flex-col items-center gap-3">
+                        <i class="fa-solid fa-bookmark text-3xl text-accent/40"></i>
+                        <p class="text-sm">No saved verses yet. Click the bookmark icon on any verse to save it here.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listContainer.innerHTML = favorites.map(v => `
+                <div class="pt-4 first:pt-0 flex flex-col gap-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-semibold px-2.5 py-1 bg-surface text-accent rounded-lg">${v.theme}</span>
+                        <button onclick="toggleFavorite(${v.id})" class="text-xs text-red-500 hover:underline flex items-center gap-1">
+                            <i class="fa-solid fa-trash-can"></i> Remove
+                        </button>
+                    </div>
+                    <div class="urdu-text text-lg font-urdu text-surface text-right py-2 px-3 bg-baseBg rounded-xl border border-textMuted/10">
+                        ${v.urdu.replace(/\n/g, '<br>')}
+                    </div>
+                    <p class="text-xs font-medium text-textDark italic">"${v.translation}"</p>
+                </div>
+            `).join('');
+        }
+
+        // Show Toast Notification
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const msgSpan = document.getElementById('toast-message');
+            msgSpan.innerText = message;
+            
+            toast.classList.remove('translate-y-[-150%]', 'opacity-0');
+            toast.classList.add('translate-y-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-0', 'opacity-100');
+                toast.classList.add('translate-y-[-150%]', 'opacity-0');
+            }, 3000);
+        }
+
+        // Reset Chat
+        function clearChat() {
+            const container = document.getElementById('chat-container');
+            container.innerHTML = `
+                <div class="flex items-start gap-3 animate-fade-in">
+                    <div class="w-9 h-9 rounded-xl bg-surface text-accent flex items-center justify-center shrink-0 shadow-md">
+                        <i class="fa-solid fa-robot text-sm"></i>
+                    </div>
+                    <div class="flex flex-col gap-2 max-w-[85%] md:max-w-[75%]">
+                        <div class="bg-baseBg p-4 rounded-2xl rounded-tl-sm border border-textMuted/15 shadow-sm text-textDark text-sm leading-relaxed">
+                            <p class="font-medium text-surface mb-1">Chat reset successfully.</p>
+                            <p>Type any keyword or spiritual concept like <strong>"khudi"</strong>, <strong>"ishq"</strong>, or <strong>"shaheen"</strong> to begin exploring anew.</p>
+                        </div>
+                        <span class="text-[10px] text-textMuted ml-1">Just now</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        // Scroll to bottom of chat
+        function scrollToBottom() {
+            const container = document.getElementById('chat-container');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // Helper for escaping quotes
+        function escapeHtml(str) {
+            return str.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '\\"');
+        }
+    </script>
+</body>
+</html>
